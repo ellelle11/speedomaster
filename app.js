@@ -6,8 +6,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
     let watchId;
     let previousTime = 0;
     let previousPosition = null;
+    let currentSpeed = 0; // Initial speed in m/s
+    let acceleration = { x: 0, y: 0, z: 0 };
 
-    function calculateSpeed(currentPosition) {
+    function calculateSpeedFromGPS(currentPosition) {
         if (previousPosition) {
             const deltaTime = (currentPosition.timestamp - previousTime) / 1000; // In seconds
             const distance = haversineDistance(previousPosition.coords, currentPosition.coords); // In meters
@@ -38,27 +40,48 @@ document.addEventListener('DOMContentLoaded', (event) => {
         return degrees * Math.PI / 180;
     }
 
+    function updateSpeedFromAcceleration(event) {
+        const accel = event.accelerationIncludingGravity;
+        const deltaTime = 0.1; // Assume a consistent time step, e.g., 100ms
+
+        // Assuming we're mainly interested in acceleration along the z-axis (up and down)
+        currentSpeed += accel.z * deltaTime; // Simple integration
+
+        // Convert speed from m/s to knots
+        const speedKnots = currentSpeed / 0.514444;
+
+        // Update the display (Note: this will update very frequently)
+        speedDisplay.textContent = `Speed: ${speedKnots.toFixed(2)} knots`;
+    }
+
     function startTracking() {
         if ('geolocation' in navigator) {
             watchId = navigator.geolocation.watchPosition(position => {
-                const speed = calculateSpeed(position);
-                speedDisplay.textContent = `Velocità: ${speed.toFixed(2)} nodi`;
+                const gpsSpeed = calculateSpeedFromGPS(position);
+
+                // Blend GPS speed with accelerometer-derived speed
+                currentSpeed = (gpsSpeed + currentSpeed) / 2; // Simple blending example
+
+                speedDisplay.textContent = `Speed: ${currentSpeed.toFixed(2)} knots`;
 
                 previousPosition = position;
                 previousTime = position.timestamp;
             }, error => {
                 console.error(error);
-                alert('Impossibile ottenere la posizione. Assicurati che i servizi di localizzazione siano attivi.');
+                alert('Unable to retrieve position. Make sure location services are enabled.');
             }, {
                 enableHighAccuracy: true,
                 maximumAge: 1000,
                 timeout: 10000
             });
 
+            // Start listening to the accelerometer
+            window.addEventListener('devicemotion', updateSpeedFromAcceleration);
+
             startButton.disabled = true;
             stopButton.disabled = false;
         } else {
-            alert('Geolocalizzazione non supportata dal tuo browser.');
+            alert('Geolocation is not supported by your browser.');
         }
     }
 
@@ -68,6 +91,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
             watchId = null;
             previousPosition = null;
             previousTime = 0;
+
+            // Stop listening to the accelerometer
+            window.removeEventListener('devicemotion', updateSpeedFromAcceleration);
 
             startButton.disabled = false;
             stopButton.disabled = true;
