@@ -10,6 +10,22 @@ document.addEventListener('DOMContentLoaded', (event) => {
     let previousPosition = null;
     let currentSpeed = 0; // Initial speed in m/s
 
+    function requestMotionPermission() {
+        if (typeof DeviceMotionEvent.requestPermission === 'function') {
+            DeviceMotionEvent.requestPermission()
+                .then(permissionState => {
+                    if (permissionState === 'granted') {
+                        startTracking();
+                    } else {
+                        alert('Permission to access device motion was denied.');
+                    }
+                })
+                .catch(console.error);
+        } else {
+            startTracking(); // Non-iOS devices or older iOS versions
+        }
+    }
+
     function calculateSpeedFromGPS(currentPosition) {
         if (previousPosition) {
             const deltaTime = (currentPosition.timestamp - previousTime) / 1000; // In seconds
@@ -56,8 +72,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     function updateCompass(event) {
-        const alpha = event.alpha; // Rotation around the z-axis (in degrees)
-        const heading = alpha ? alpha : 0;
+        const alpha = event.alpha || 0; // Fallback to 0 if alpha is undefined
+        const heading = alpha;
 
         // Update the needle rotation
         needle.style.transform = `rotate(${heading}deg)`;
@@ -114,6 +130,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
     }
 
-    startButton.addEventListener('click', startTracking);
+    startButton.addEventListener('click', requestMotionPermission);
     stopButton.addEventListener('click', stopTracking);
 });
