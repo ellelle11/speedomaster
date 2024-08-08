@@ -15,14 +15,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
             DeviceMotionEvent.requestPermission()
                 .then(permissionState => {
                     if (permissionState === 'granted') {
-                        startTracking();
+                        startCompass();
                     } else {
                         alert('Permission to access device motion was denied.');
                     }
                 })
                 .catch(console.error);
         } else {
-            startTracking(); // Non-iOS devices or older iOS versions
+            startCompass(); // Non-iOS devices or older iOS versions
         }
     }
 
@@ -82,8 +82,17 @@ document.addEventListener('DOMContentLoaded', (event) => {
         directionDisplay.textContent = `Direction: ${Math.round(heading)}°`;
     }
 
+    function startCompass() {
+        if ('DeviceOrientationEvent' in window) {
+            // Start listening to the compass orientation
+            window.addEventListener('deviceorientation', updateCompass);
+        } else {
+            alert('Device orientation is not supported by your browser.');
+        }
+    }
+
     function startTracking() {
-        if ('geolocation' in navigator && 'DeviceOrientationEvent' in window) {
+        if ('geolocation' in navigator) {
             watchId = navigator.geolocation.watchPosition(position => {
                 const gpsSpeed = calculateSpeedFromGPS(position);
 
@@ -103,14 +112,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 timeout: 10000
             });
 
-            // Start listening to the accelerometer and compass
+            // Start listening to the accelerometer
             window.addEventListener('devicemotion', updateSpeedFromAcceleration);
-            window.addEventListener('deviceorientation', updateCompass);
 
             startButton.disabled = true;
             stopButton.disabled = false;
         } else {
-            alert('Geolocation or device orientation is not supported by your browser.');
+            alert('Geolocation is not supported by your browser.');
         }
     }
 
@@ -121,15 +129,17 @@ document.addEventListener('DOMContentLoaded', (event) => {
             previousPosition = null;
             previousTime = 0;
 
-            // Stop listening to the accelerometer and compass
+            // Stop listening to the accelerometer
             window.removeEventListener('devicemotion', updateSpeedFromAcceleration);
-            window.removeEventListener('deviceorientation', updateCompass);
 
             startButton.disabled = false;
             stopButton.disabled = true;
         }
     }
 
-    startButton.addEventListener('click', requestMotionPermission);
+    // Always start the compass as soon as the page loads
+    requestMotionPermission();
+
+    startButton.addEventListener('click', startTracking);
     stopButton.addEventListener('click', stopTracking);
 });
