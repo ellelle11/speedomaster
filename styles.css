@@ -22,7 +22,39 @@ button {
     font-size: 16px;
 }
 
-#speedDisplay {
+#speedDisplay, #direction {
     margin-top: 20px;
     font-size: 24px;
+}
+
+.compass {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    border: 10px solid #000;
+    border-radius: 50%;
+    margin: 20px auto;
+    background-color: #e0e0e0;
+}
+
+.needle {
+    position: absolute;
+    width: 4px;
+    height: 90px;
+    background-color: red;
+    top: 10px;
+    left: 50%;
+    transform-origin: 50% 90%;
+    transform: rotate(0deg);
+}
+
+.center {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: black;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }

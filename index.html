@@ -1,17 +1,22 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boat Speed</title>
+    <title>Boat Speed & Compass</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Boat Speed</h1>
+        <h1>Boat Speed & Compass</h1>
+        <div class="compass">
+            <div class="needle" id="needle"></div>
+            <div class="center"></div>
+        </div>
+        <div id="direction">Direction: 0°</div>
+        <div id="speedDisplay">Speed: 0 knots</div>
         <button id="startButton">Start</button>
         <button id="stopButton" disabled>Stop</button>
-        <div id="speedDisplay">Speed: 0 knots</div>
     </div>
     <script src="app.js"></script>
 </body>

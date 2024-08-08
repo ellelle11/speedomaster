@@ -2,12 +2,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const startButton = document.getElementById('startButton');
     const stopButton = document.getElementById('stopButton');
     const speedDisplay = document.getElementById('speedDisplay');
+    const directionDisplay = document.getElementById('direction');
+    const needle = document.getElementById('needle');
 
     let watchId;
     let previousTime = 0;
     let previousPosition = null;
     let currentSpeed = 0; // Initial speed in m/s
-    let acceleration = { x: 0, y: 0, z: 0 };
 
     function calculateSpeedFromGPS(currentPosition) {
         if (previousPosition) {
@@ -54,8 +55,19 @@ document.addEventListener('DOMContentLoaded', (event) => {
         speedDisplay.textContent = `Speed: ${speedKnots.toFixed(2)} knots`;
     }
 
+    function updateCompass(event) {
+        const alpha = event.alpha; // Rotation around the z-axis (in degrees)
+        const heading = alpha ? alpha : 0;
+
+        // Update the needle rotation
+        needle.style.transform = `rotate(${heading}deg)`;
+
+        // Update the heading display
+        directionDisplay.textContent = `Direction: ${Math.round(heading)}°`;
+    }
+
     function startTracking() {
-        if ('geolocation' in navigator) {
+        if ('geolocation' in navigator && 'DeviceOrientationEvent' in window) {
             watchId = navigator.geolocation.watchPosition(position => {
                 const gpsSpeed = calculateSpeedFromGPS(position);
 
@@ -75,13 +87,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 timeout: 10000
             });
 
-            // Start listening to the accelerometer
+            // Start listening to the accelerometer and compass
             window.addEventListener('devicemotion', updateSpeedFromAcceleration);
+            window.addEventListener('deviceorientation', updateCompass);
 
             startButton.disabled = true;
             stopButton.disabled = false;
         } else {
-            alert('Geolocation is not supported by your browser.');
+            alert('Geolocation or device orientation is not supported by your browser.');
         }
     }
 
@@ -92,8 +105,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
             previousPosition = null;
             previousTime = 0;
 
-            // Stop listening to the accelerometer
+            // Stop listening to the accelerometer and compass
             window.removeEventListener('devicemotion', updateSpeedFromAcceleration);
+            window.removeEventListener('deviceorientation', updateCompass);
 
             startButton.disabled = false;
             stopButton.disabled = true;
